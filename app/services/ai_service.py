@@ -1,7 +1,7 @@
-import requests
+import os
+from openai import OpenAI
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3:8b"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 def format_ai_output(ai_text):
@@ -58,6 +58,7 @@ def format_ai_output(ai_text):
 
     return html
 
+
 def generate_playbook(alert):
 
     prompt = f"""
@@ -74,19 +75,19 @@ Include:
 4. Mitigation steps
 """
 
-    payload = {
-        "model": MODEL,
-        "prompt": prompt,
-        "stream": False
-    }
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500
+        )
 
-    response = requests.post(OLLAMA_URL, json=payload)
+        return response.choices[0].message.content
 
-    if response.status_code == 200:
-        data = response.json()
-        return data["response"]
-
-    return "AI playbook generation failed."
+    except Exception as e:
+        return f"AI playbook generation failed: {str(e)}"
 
 
 def generate_mitigation(description):
@@ -131,22 +132,25 @@ Vulnerability description:
 {description}
 """
 
-    response = requests.post(
-        OLLAMA_URL,
-        json={
-            "model": MODEL,
-            "prompt": prompt,
-            "stream": False
-        }
-    )
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=700
+        )
 
-    result = response.json()["response"]
+        result = response.choices[0].message.content
 
-    # cleanup
-    result = result.replace("Here are the requested sections:", "")
-    result = result.replace("Here are the answers:", "")
+        # cleanup
+        result = result.replace("Here are the requested sections:", "")
+        result = result.replace("Here are the answers:", "")
 
-    # convert AI output into formatted HTML
-    formatted_output = format_ai_output(result)
+        # convert AI output into formatted HTML
+        formatted_output = format_ai_output(result)
 
-    return formatted_output
+        return formatted_output
+
+    except Exception as e:
+        return f"AI mitigation generation failed: {str(e)}"
