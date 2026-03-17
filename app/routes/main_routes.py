@@ -115,7 +115,7 @@ def ioc_lookup():
             suspicious=suspicious,
             harmless=harmless,
             total=total,
-            extra=extra  # ✅ FIX
+            extra=extra, 
             urlscan=urlscan if 'urlscan' in locals() else None
         )
 
