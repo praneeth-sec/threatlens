@@ -42,31 +42,37 @@ def check_domain(domain):
     
 import base64
 
-def check_url(url):
+def check_url(ioc):
+    try:
+        encoded_url = base64.urlsafe_b64encode(ioc.encode()).decode().strip("=")
 
-    headers = {
-        "x-apikey": VT_API_KEY
-    }
+        headers = {
+            "x-apikey": VT_API_KEY
+        }
 
-    # Encode URL in base64 (VirusTotal requirement)
-    url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
+        response = requests.get(
+            f"https://www.virustotal.com/api/v3/urls/{encoded_url}",
+            headers=headers,
+            timeout=5
+        )
 
-    vt_url = f"https://www.virustotal.com/api/v3/urls/{url_id}"
+        if response.status_code != 200:
+            print("VT URL error:", response.text)
+            return None
 
-    response = requests.get(vt_url, headers=headers)
+        data = response.json()
 
-    if response.status_code != 200:
+        stats = data["data"]["attributes"]["last_analysis_stats"]
+
+        return {
+            "malicious": stats.get("malicious", 0),
+            "suspicious": stats.get("suspicious", 0),
+            "harmless": stats.get("harmless", 0)
+        }
+
+    except Exception as e:
+        print("VT URL exception:", e)
         return None
-
-    data = response.json()
-
-    stats = data["data"]["attributes"]["last_analysis_stats"]
-
-    return {
-        "malicious": stats.get("malicious", 0),
-        "suspicious": stats.get("suspicious", 0),
-        "harmless": stats.get("harmless", 0)
-    }
 
 def check_hash(file_hash):
 
