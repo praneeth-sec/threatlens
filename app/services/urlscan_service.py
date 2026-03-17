@@ -20,10 +20,11 @@ def scan_url(url):
             "https://urlscan.io/api/v1/scan/",
             headers=headers,
             json=data,
-            timeout=5
+            timeout=10
         )
 
         if response.status_code != 200:
+            print("Scan submit failed:", response.text)
             return None
 
         uuid = response.json().get("uuid")
@@ -31,22 +32,29 @@ def scan_url(url):
         if not uuid:
             return None
 
-        # 🔥 WAIT for scan to complete
-        time.sleep(5)
+        result_api = f"https://urlscan.io/api/v1/result/{uuid}/"
 
-        result_url = f"https://urlscan.io/api/v1/result/{uuid}/"
+        # 🔥 FIX 1: wait properly (instead of fixed sleep)
+        for _ in range(10):  # retry ~20 seconds
+            result = requests.get(result_api, timeout=10)
 
-        result = requests.get(result_url, timeout=5)
+            if result.status_code == 200:
+                data = result.json()
 
-        if result.status_code != 200:
-            return None
+                # 🔥 FIX 2: correct screenshot path
+                screenshot = data.get("page", {}).get("screenshot")
 
-        data = result.json()
+                if screenshot:
+                    return {
+                        "screenshot": screenshot,
+                        "result_url": f"https://urlscan.io/result/{uuid}/"
+                    }
 
-        screenshot = data.get("task", {}).get("screenshotURL")
+            time.sleep(2)
 
+        # fallback if screenshot not ready
         return {
-            "screenshot": screenshot if screenshot else None,
+            "screenshot": None,
             "result_url": f"https://urlscan.io/result/{uuid}/"
         }
 
