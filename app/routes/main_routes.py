@@ -8,6 +8,7 @@ from flask import session, redirect
 from app.services.vt_service import check_ip, check_domain, check_url, check_hash
 from flask import request
 from app.services.ip_enrich_service import enrich_ip
+from app.services.urlscan_service import scan_url
 
 main_bp = Blueprint("main", __name__)
 
@@ -53,6 +54,7 @@ def ioc_lookup():
             
         elif ioc_type == "url":
             result = check_url(ioc)
+            urlscan = scan_url(ioc)
             
         elif ioc_type == "hash":
             result = check_hash(ioc)
@@ -114,10 +116,11 @@ def ioc_lookup():
             harmless=harmless,
             total=total,
             extra=extra  # ✅ FIX
+            urlscan=urlscan if 'urlscan' in locals() else None
         )
 
     return render_template("ip_lookup.html", extra=None)  # ✅ FIX
-
+           
 
 @main_bp.route("/")
 def home():

@@ -200,9 +200,9 @@ Threat Level: <span>{{ threat_level }}</span>
 
 <!-- ✅ FIX: BAR FIRST -->
 <div class="threat-bar">
-<div class="threat-fill"
-style="width: {{ ((malicious / total) * 100) if total > 0 else 0 }}%;">
-</div>
+    <div class="threat-fill"
+    style="width: {{ ((malicious / total) * 100) if total > 0 else 0 }}%;">
+    </div>
 </div>
 
 <!-- ✅ FIX: EXTRA INFO AFTER BAR -->
@@ -215,6 +215,23 @@ style="width: {{ ((malicious / total) * 100) if total > 0 else 0 }}%;">
 <p><strong>City:</strong> {{ extra.city or "N/A" }}</p>
 <p><strong>ISP / Org:</strong> {{ extra.org or "N/A" }}</p>
 <p><strong>Abuse Score:</strong> {{ extra.abuse_score or 0 }}%</p>
+
+</div>
+{% endif %}
+
+{% if urlscan %}
+<div class="extra-info">
+
+<h3>🖼️ Live Website Screenshot</h3>
+
+<img src="{{ urlscan.screenshot }}" 
+     style="width:100%; border-radius:10px; margin-top:10px;">
+
+<p style="margin-top:10px;">
+<a href="{{ urlscan.result_url }}" target="_blank" style="color:#60a5fa;">
+View Full Report →
+</a>
+</p>
 
 </div>
 {% endif %}
