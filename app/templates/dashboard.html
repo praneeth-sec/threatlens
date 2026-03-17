@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>ThreatLens Security Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+/* BODY */
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(270deg,#071a2c,#0b253d,#071a2c);
+background-size:600% 600%;
+animation:bgMove 15s ease infinite;
+color:white;
+display:flex;
+overflow-x:hidden;
+}
+
+@keyframes bgMove{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+/* GRID OVERLAY */
+
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background-image:
+linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+background-size:60px 60px;
+pointer-events:none;
+animation:gridMove 20s linear infinite;
+}
+
+@keyframes gridMove{
+0%{transform:translateY(0px);}
+100%{transform:translateY(60px);}
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:230px;
+background:#0b253d;
+height:100vh;
+position:fixed;
+padding-top:30px;
+}
+
+.logo{
+text-align:center;
+font-size:20px;
+font-weight:bold;
+color:#60a5fa;
+margin-bottom:10px;
+}
+
+.version{
+text-align:center;
+font-size:11px;
+color:#9ca3af;
+margin-bottom:30px;
+}
+
+.nav-item{
+display:flex;
+align-items:center;
+gap:10px;
+padding:15px 25px;
+color:white;
+text-decoration:none;
+font-size:15px;
+}
+
+.nav-item:hover{
+background:#1c2e40;
+}
+
+.icon{
+font-size:18px;
+}
+
+/* MAIN */
+
+.main{
+margin-left:230px;
+padding:40px;
+width:calc(100% - 230px);
+box-sizing:border-box;
+}
+
+/* HEADER */
+
+.header{
+margin-bottom:25px;
+}
+
+.header h1{
+margin:0;
+font-size:30px;
+}
+
+.header p{
+color:#9ca3af;
+margin-top:5px;
+}
+
+.logout-btn{
+position:absolute;
+top:25px;
+right:40px;
+background:#ef4444;
+padding:8px 14px;
+border-radius:6px;
+text-decoration:none;
+color:white;
+font-size:14px;
+}
+
+.logout-btn:hover{
+background:#dc2626;
+}
+
+/* STATS */
+
+.stats{
+display:flex;
+gap:20px;
+margin-bottom:30px;
+}
+
+.stat-card{
+background:#1c2e40;
+padding:20px;
+border-radius:10px;
+width:200px;
+box-shadow:0 10px 20px rgba(0,0,0,0.4);
+}
+
+.stat-card h2{
+margin:0;
+color:#60a5fa;
+}
+
+.stat-card p{
+margin:5px 0 0 0;
+font-size:13px;
+color:#9ca3af;
+}
+
+/* LIVE DOT */
+
+.live-dot{
+height:10px;
+width:10px;
+background:#ef4444;
+border-radius:50%;
+display:inline-block;
+margin-right:8px;
+animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+0%{box-shadow:0 0 0 0 rgba(239,68,68,0.7);}
+70%{box-shadow:0 0 0 10px rgba(239,68,68,0);}
+100%{box-shadow:0 0 0 0 rgba(239,68,68,0);}
+}
+
+/* THREAT FEED */
+
+.threat-feed{
+margin-top:20px;
+margin-bottom:30px;
+}
+
+.threat-cards{
+display:flex;
+flex-wrap:wrap;
+gap:20px;
+}
+
+.threat-card{
+background:#1c2e40;
+padding:20px;
+border-radius:10px;
+width:250px;
+box-shadow:0 10px 20px rgba(0,0,0,0.4);
+transition:0.3s;
+}
+
+.threat-card:hover{
+transform:translateY(-5px);
+}
+
+.threat-card h4{
+margin:0 0 8px 0;
+color:#60a5fa;
+}
+
+.threat-card p{
+font-size:13px;
+color:#9ca3af;
+}
+
+/* SEVERITY */
+
+.severity{
+background:#ef4444;
+color:white;
+font-size:10px;
+padding:3px 6px;
+border-radius:4px;
+margin-bottom:8px;
+display:inline-block;
+}
+
+/* TIMELINE */
+
+.timeline{
+margin-top:20px;
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.timeline-item{
+background:#22384e;
+padding:15px;
+border-radius:8px;
+display:flex;
+gap:15px;
+align-items:center;
+}
+
+.time{
+color:#60a5fa;
+font-weight:bold;
+font-size:13px;
+min-width:60px;
+}
+
+.event{
+color:#cbd5e1;
+font-size:14px;
+}
+
+/* PANEL */
+
+.panel{
+background:#1c2e40;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,0.4);
+margin-top:30px;
+}
+
+.panel h3{
+margin-top:0;
+}
+
+.panel p{
+color:#9ca3af;
+line-height:1.6;
+}
+
+/* SUCCESS BANNER */
+
+.success-banner{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#0d3b1d;
+color:#10b981;
+padding:12px 20px;
+border-radius:6px;
+font-size:14px;
+box-shadow:0 5px 20px rgba(0,0,0,0.4);
+animation:fadeOut 5s forwards;
+}
+
+@keyframes fadeOut{
+0%{opacity:1;}
+80%{opacity:1;}
+100%{opacity:0;}
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- Sidebar -->
+
+<div class="sidebar">
+
+<div class="logo">ThreatLens</div>
+<div class="version">v1.0</div>
+
+<a class="nav-item" href="/ioc-lookup">
+<span class="icon">🛡</span>
+IOC Reputation
+</a>
+
+<a class="nav-item" href="/cve-analyzer">
+<span class="icon">📊</span>
+CVE Analyzer
+</a>
+
+<a class="nav-item" href="/trending-vulnerabilities">
+<span class="icon">🔥</span>
+Trending Threats
+</a>
+
+<a class="nav-item" href="/playbooks">
+<span class="icon">📘</span>
+SOC Playbooks
+</a>
+
+</div>
+
+<!-- Main -->
+
+<div class="main">
+
+<div class="header">
+<h1>Security Dashboard</h1>
+<p>Cyber Threat Intelligence & Vulnerability Monitoring</p>
+<a href="/logout" class="logout-btn">Logout</a>
+<p>Welcome, {{ session.username }}</p>
+</div>
+
+<!-- Stats -->
+
+<div class="stats">
+
+<div class="stat-card">
+<h2 id="activeThreats">0</h2>
+<p>Active Threats</p>
+</div>
+
+<div class="stat-card">
+<h2 id="trackedCVEs">0</h2>
+<p>Tracked CVEs</p>
+</div>
+
+<div class="stat-card">
+<h2>24/7</h2>
+<p>Threat Monitoring</p>
+</div>
+
+</div>
+
+<!-- Threat Feed -->
+
+<div class="threat-feed">
+
+<h3><span class="live-dot"></span>Live Threat Feed</h3>
+
+<div id="threatCards" class="threat-cards">
+
+<div class="threat-card">
+<h4>Loading threats...</h4>
+<p>Fetching intelligence feed</p>
+</div>
+
+</div>
+
+</div>
+
+<!-- Timeline -->
+
+<div class="panel">
+
+<h3>Threat Intelligence Timeline</h3>
+
+<div id="timeline" class="timeline">
+
+<div class="timeline-item">
+<span class="time">Loading...</span>
+<span class="event">Collecting threat intelligence</span>
+</div>
+
+</div>
+
+</div>
+
+<!-- Exploit Graph -->
+
+<div class="panel">
+
+<h3>Exploit Probability Trend</h3>
+
+<canvas id="exploitChart" height="100"></canvas>
+
+</div>
+
+<!-- Upcoming Features -->
+
+<div class="panel">
+
+<h3>Upcoming Features</h3>
+
+<p>ThreatLens platform is evolving.</p>
+
+<ul>
+<li>Interactive Sandbox</li>
+<li>Malware Detonation Lab</li>
+<li>Threat Graph Intelligence</li>
+<li>IOC Correlation Engine</li>
+<li>AI Threat Investigation</li>
+</ul>
+
+</div>
+
+</div>
+
+<script>
+
+function loadThreatFeed(){
+
+fetch("/threat-feed")
+.then(r => r.json())
+.then(data => {
+
+let container = document.getElementById("threatCards")
+container.innerHTML = ""
+
+document.getElementById("activeThreats").innerText = data.length
+document.getElementById("trackedCVEs").innerText = data.length
+
+data.forEach(cve => {
+
+let card = document.createElement("div")
+card.className = "threat-card"
+
+card.innerHTML = `
+<h4>${cve.cve}</h4>
+<span class="severity">${cve.risk}</span>
+<p>EPSS: ${cve.epss}</p>
+<p>${cve.exploit === "HIGH" ? "Exploit Likely" : "Low Exploit Risk"}</p>
+<p style="color:#60a5fa;font-size:12px">Click to analyze →</p>
+`
+
+card.style.cursor = "pointer"
+
+card.onclick = function(){
+window.location.href = "/cve-analyzer?cve=" + cve.cve
+}
+
+container.appendChild(card)
+
+})
+
+})
+}
+
+function loadTimeline(){
+
+fetch("/threat-feed")
+.then(r => r.json())
+.then(data => {
+
+let container = document.getElementById("timeline")
+container.innerHTML = ""
+
+data.forEach((cve,index)=>{
+
+let now = new Date()
+let time = new Date(now.getTime() - (index * 60000))
+let timestamp = time.toLocaleTimeString()
+
+let item = document.createElement("div")
+item.className = "timeline-item"
+
+item.innerHTML = `
+<span class="time">${timestamp}</span>
+<span class="event">${cve} detected in threat intelligence feed</span>
+`
+
+container.appendChild(item)
+
+})
+
+})
+}
+
+async function loadExploitGraph(){
+
+let res = await fetch("/threat-feed")
+let data = await res.json()
+
+if(data.length === 0) return
+
+let labels = []
+let scores = []
+
+data.forEach(item => {
+    labels.push(item.cve)
+    scores.push(item.epss * 100)
+})
+
+const ctx = document.getElementById("exploitChart").getContext("2d")
+
+new Chart(ctx,{
+type:"bar",
+data:{
+labels: labels,
+datasets:[{
+label:"Exploit Probability %",
+data: scores,
+backgroundColor:"#ef4444"
+}]
+},
+options:{
+scales:{
+y:{
+beginAtZero:true,
+max:100
+}
+}
+}
+})
+}
+
+loadThreatFeed()
+setTimeout(loadExploitGraph,1000)
+loadTimeline()
+setInterval(loadTimeline,30000)
+
+</script>
+
+{% if login_success %}
+<div class="success-banner">
+✔ Login successful. Welcome to ThreatLens SOC Dashboard.
+</div>
+{% endif %}
+
+</body>
+</html>

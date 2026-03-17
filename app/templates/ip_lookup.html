@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<title>ThreatLens IOC Lookup</title>
+
+<style>
+
+body{
+background: linear-gradient(120deg,#071a2c,#0f2437);
+font-family: Arial, sans-serif;
+color:white;
+margin:0;
+padding:0;
+}
+
+.container{
+width:700px;
+margin:80px auto;
+}
+
+.card{
+background:#1c2e40;
+padding:30px;
+border-radius:10px;
+box-shadow:0 10px 20px rgba(0,0,0,0.4);
+}
+
+h2{
+text-align:center;
+margin-bottom:25px;
+}
+
+input{
+width:75%;
+padding:12px;
+border-radius:6px;
+border:none;
+font-size:16px;
+}
+
+button{
+padding:12px 20px;
+background:#3b82f6;
+border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+font-size:16px;
+}
+
+button:hover{
+background:#2563eb;
+}
+
+.result{
+margin-top:25px;
+background:#0f2437;
+padding:20px;
+border-radius:8px;
+}
+
+/* Reputation cards */
+
+.reputation-container{
+display:flex;
+gap:20px;
+margin-top:25px;
+}
+
+.rep-card{
+flex:1;
+padding:20px;
+border-radius:10px;
+text-align:center;
+font-size:18px;
+}
+
+.rep-card h3{
+margin-bottom:10px;
+}
+
+.rep-card.malicious{
+background:#3b0d0d;
+color:#ff4d4d;
+}
+
+.rep-card.suspicious{
+background:#3b2d0d;
+color:#f59e0b;
+}
+
+.rep-card.harmless{
+background:#0d3b1d;
+color:#10b981;
+}
+
+/* Threat bar */
+
+.threat-bar-container{
+margin-top:30px;
+}
+
+.threat-bar{
+width:100%;
+height:20px;
+background:#1f2937;
+border-radius:5px;
+overflow:hidden;
+}
+
+.threat-fill{
+height:100%;
+background:#ef4444;
+}
+
+.verdict{
+margin-top:15px;
+font-size:18px;
+}
+
+.verdict span{
+font-weight:bold;
+}
+
+.error{
+color:#ff4d4d;
+margin-top:20px;
+}
+
+.back{
+margin-top:25px;
+display:inline-block;
+color:#60a5fa;
+text-decoration:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>IOC Reputation Lookup</h2>
+
+<form method="POST">
+
+<input type="text" name="ip" placeholder="Enter IOC (IP, domain, URL, hash)" required>
+
+<button type="submit">Investigate</button>
+
+</form>
+
+{% if error %}
+
+<p class="error">{{ error }}</p>
+
+{% endif %}
+
+{% if result %}
+
+<div class="result">
+
+<h3>Results for {{ ioc }}</h3>
+
+<p>Reputation Score: <strong>{{ reputation_score }}</strong> engines detected</p>
+
+<div class="verdict">
+Threat Level: <span>{{ threat_level }}</span>
+</div>
+
+<div class="reputation-container">
+
+<div class="rep-card malicious">
+<h3>Malicious</h3>
+<p>{{ malicious }}</p>
+</div>
+
+<div class="rep-card suspicious">
+<h3>Suspicious</h3>
+<p>{{ suspicious }}</p>
+</div>
+
+<div class="rep-card harmless">
+<h3>Harmless</h3>
+<p>{{ harmless }}</p>
+</div>
+
+</div>
+
+<div class="threat-bar-container">
+
+<p>Threat Score</p>
+
+<!-- ✅ FIX: BAR FIRST -->
+<div class="threat-bar">
+<div class="threat-fill"
+style="width: {{ ((malicious / total) * 100) if total > 0 else 0 }}%;">
+</div>
+</div>
+
+<!-- ✅ FIX: EXTRA INFO AFTER BAR -->
+{% if extra is not none %}
+<div class="extra-info">
+
+<h3>🌍 IP Intelligence</h3>
+
+<p><strong>Country:</strong> {{ extra.country or "N/A" }}</p>
+<p><strong>City:</strong> {{ extra.city or "N/A" }}</p>
+<p><strong>ISP / Org:</strong> {{ extra.org or "N/A" }}</p>
+<p><strong>Abuse Score:</strong> {{ extra.abuse_score or 0 }}%</p>
+
+</div>
+{% endif %}
+
+</div>
+
+</div>
+
+{% endif %}
+
+<a class="back" href="/dashboard">← Back to Dashboard</a>
+
+</div>
+
+</div>
+
+</body>
+</html>

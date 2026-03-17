@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>Create Account - ThreatLens</title>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#020617;
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+overflow:hidden;
+}
+
+/* Cyber grid background */
+
+body::before{
+content:"";
+position:fixed;
+width:200%;
+height:200%;
+background-image:
+linear-gradient(rgba(0,150,255,0.1) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,150,255,0.1) 1px, transparent 1px);
+background-size:50px 50px;
+animation:gridMove 20s linear infinite;
+z-index:0;
+}
+
+@keyframes gridMove{
+0%{transform:translate(0,0);}
+100%{transform:translate(-50px,-50px);}
+}
+
+/* Signup Card */
+
+.signup-container{
+background:#1c2e40;
+padding:40px;
+border-radius:12px;
+width:360px;
+box-shadow:0 15px 40px rgba(0,0,0,0.7);
+text-align:center;
+position:relative;
+z-index:1;
+}
+
+/* Logo */
+
+.logo{
+font-size:30px;
+font-weight:bold;
+color:#60a5fa;
+margin-bottom:5px;
+}
+
+.subtitle{
+color:#9ca3af;
+font-size:14px;
+margin-bottom:30px;
+}
+
+/* Inputs */
+
+input{
+width:100%;
+padding:12px;
+margin-bottom:10px;
+border:none;
+border-radius:6px;
+font-size:14px;
+background:#0f2437;
+color:white;
+}
+
+/* Password strength */
+
+.strength{
+font-size:12px;
+margin-bottom:15px;
+text-align:left;
+}
+
+/* Button */
+
+button{
+width:100%;
+padding:12px;
+background:#3b82f6;
+border:none;
+border-radius:6px;
+color:white;
+font-size:15px;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
+}
+
+/* Links */
+
+.links{
+margin-top:15px;
+font-size:13px;
+color:#9ca3af;
+}
+
+.links a{
+color:#60a5fa;
+text-decoration:none;
+}
+
+.links a:hover{
+text-decoration:underline;
+}
+
+/* Error */
+
+.error{
+background:#3b0d0d;
+padding:10px;
+border-radius:6px;
+color:#ff4d4d;
+margin-bottom:15px;
+font-size:13px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="signup-container">
+
+<div class="logo">ThreatLens</div>
+<div class="subtitle">Create your SOC analyst account</div>
+
+{% if error %}
+
+<div class="error">{{ error }}</div>
+{% endif %}
+
+<form method="POST" action="/signup">
+
+<input name="username" placeholder="Username" required>
+
+<input id="email" name="email" placeholder="Email Address" required>
+
+<input id="password" type="password" name="password" placeholder="Password" required>
+
+<div class="g-recaptcha" data-sitekey="6LeXYY0sAAAAAGehA-irytyFAv33I0G4GqQNjIsw"></div>
+
+<div id="strength" class="strength"></div>
+
+<button type="submit">Create Account</button>
+
+</form>
+
+<div class="links">
+Already have an account? <a href="/login">Login</a>
+</div>
+
+</div>
+
+<script>
+
+/* Password strength */
+
+let password = document.getElementById("password")
+let strength = document.getElementById("strength")
+
+password.addEventListener("input",function(){
+
+let value=password.value
+let score=0
+
+if(value.length>6) score++
+if(/[A-Z]/.test(value)) score++
+if(/[0-9]/.test(value)) score++
+if(/[!@#$%^&*]/.test(value)) score++
+
+if(score<=1){
+strength.innerHTML="Weak password"
+strength.style.color="#ef4444"
+}
+
+else if(score==2){
+strength.innerHTML="Medium strength password"
+strength.style.color="#f59e0b"
+}
+
+else{
+strength.innerHTML="Strong password"
+strength.style.color="#22c55e"
+}
+
+})
+
+</script>
+
+</body>
+</html>
+

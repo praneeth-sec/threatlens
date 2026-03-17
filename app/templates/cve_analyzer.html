@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>CVE Intelligence Analyzer</title>
+
+<style>
+
+/* Body */
+
+body{
+background:#071a2b;
+font-family:Arial, Helvetica, sans-serif;
+color:white;
+margin:0;
+padding:0;
+}
+
+/* Navbar */
+
+.navbar{
+width:100%;
+background:#0b253d;
+padding:15px 0;
+margin-bottom:30px;
+}
+
+.nav-container{
+width:1100px;
+margin:auto;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:20px;
+font-weight:bold;
+color:#60a5fa;
+}
+
+.dashboard-btn{
+background:#3b82f6;
+padding:8px 16px;
+border-radius:6px;
+text-decoration:none;
+color:white;
+font-size:14px;
+}
+
+.dashboard-btn:hover{
+background:#2563eb;
+}
+
+/* Container */
+
+.container{
+width:1100px;
+margin:auto;
+padding-top:40px;
+}
+
+/* Title */
+
+.title{
+text-align:center;
+font-size:34px;
+font-weight:600;
+margin-bottom:40px;
+}
+
+/* Search */
+
+.search-box{
+display:flex;
+justify-content:center;
+gap:15px;
+margin-bottom:50px;
+}
+
+.search-box input{
+width:420px;
+padding:12px;
+border-radius:6px;
+border:none;
+font-size:15px;
+}
+
+.search-box button{
+background:#3b82f6;
+border:none;
+padding:12px 20px;
+border-radius:6px;
+color:white;
+font-size:14px;
+cursor:pointer;
+}
+
+.search-box button:hover{
+background:#2563eb;
+}
+
+/* Loader */
+
+.loader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(10,20,40,0.95);
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+z-index:9999;
+}
+
+.spinner{
+border:5px solid #1e2f4a;
+border-top:5px solid #4ea1ff;
+border-radius:50%;
+width:60px;
+height:60px;
+animation:spin 1s linear infinite;
+margin-bottom:20px;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+/* CVE Header */
+
+.cve-header{
+background:#1c2e40;
+padding:25px;
+border-radius:10px;
+margin-bottom:40px;
+}
+
+.cve-header h2{
+margin:0 0 10px 0;
+}
+
+/* Summary */
+
+.summary-section{
+background:#1c2e40;
+padding:35px;
+border-radius:10px;
+margin-bottom:40px;
+}
+
+.summary-title{
+text-align:center;
+font-size:24px;
+margin-bottom:35px;
+}
+
+/* Cards */
+
+.cards{
+display:flex;
+gap:25px;
+justify-content:space-between;
+flex-wrap:wrap;
+}
+
+.card{
+flex:1;
+min-width:200px;
+background:#22384e;
+padding:25px;
+border-radius:8px;
+text-align:center;
+}
+
+.card h4{
+margin-bottom:10px;
+color:#94a3b8;
+}
+
+/* Severity Colors */
+
+.severity-critical{
+background:#ef4444;
+color:white;
+padding:5px 12px;
+border-radius:6px;
+font-weight:bold;
+}
+
+.severity-high{
+background:#f97316;
+color:white;
+padding:5px 12px;
+border-radius:6px;
+font-weight:bold;
+}
+
+.severity-medium{
+background:#facc15;
+color:black;
+padding:5px 12px;
+border-radius:6px;
+font-weight:bold;
+}
+
+.severity-low{
+background:#22c55e;
+color:white;
+padding:5px 12px;
+border-radius:6px;
+font-weight:bold;
+}
+
+/* Exploit Status */
+
+.exploit-yes{
+color:#ef4444;
+font-weight:bold;
+}
+
+.exploit-no{
+color:#22c55e;
+font-weight:bold;
+}
+
+/* Description */
+
+.description-text{
+max-width:750px;
+margin:auto;
+line-height:1.8;
+font-size:15px;
+color:#cbd5e1;
+text-align:left;
+}
+
+/* AI Section */
+
+.ai-section{
+margin-top:40px;
+background:#1c2e40;
+padding:35px;
+border-radius:10px;
+width:1100px;
+margin-left:auto;
+margin-right:auto;
+}
+
+button:disabled{
+background:#6b7280;
+cursor:not-allowed;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="loading" class="loader">
+<div class="spinner"></div>
+<div>Analyzing CVE Intelligence...</div>
+</div>
+
+<!-- Navbar -->
+
+<div class="navbar">
+<div class="nav-container">
+
+<div class="logo">
+ThreatLens
+</div>
+
+<a href="/dashboard" class="dashboard-btn">
+Return to Dashboard
+</a>
+
+</div>
+</div>
+
+<div class="container">
+
+<div class="title">
+CVE Intelligence Analyzer
+</div>
+
+<form method="POST">
+
+<div class="search-box">
+
+<input
+type="text"
+name="cve"
+placeholder="Enter CVE (Example: CVE-2024-3094)"
+required
+>
+
+<button type="submit" id="analyzeBtn">
+Analyze
+</button>
+
+</div>
+
+</form>
+
+{% if cve_result %}
+
+<!-- CVE Header -->
+
+<div class="cve-header">
+
+<h2>{{ cve_result.id }}</h2>
+
+<p><b>Severity:</b> {{ cve_result.severity }}</p>
+<p><b>CVSS Score:</b> {{ cve_result.cvss }}</p>
+<p><b>Published:</b> {{ cve_result.published }}</p>
+<p><b>Vendor/Product:</b> {{ cve_result.vendor }}</p>
+
+</div>
+
+<!-- Threat Summary -->
+
+<div class="summary-section">
+
+<div class="summary-title">
+Threat Intelligence Summary
+</div>
+
+<div class="cards">
+
+<div class="card">
+
+<h4>Severity</h4>
+
+{% if cve_result.severity == "CRITICAL" %}
+<span class="severity-critical">{{ cve_result.severity }}</span>
+{% elif cve_result.severity == "HIGH" %}
+<span class="severity-high">{{ cve_result.severity }}</span>
+{% elif cve_result.severity == "MEDIUM" %}
+<span class="severity-medium">{{ cve_result.severity }}</span>
+{% else %}
+<span class="severity-low">{{ cve_result.severity }}</span>
+{% endif %}
+
+</div>
+
+<div class="card">
+
+<h4>CVSS Score</h4>
+{{ cve_result.cvss }}
+
+</div>
+
+<div class="card">
+
+<h4>Exploit Status</h4>
+
+{% if exploit.exploitdb or exploit.github or exploit.metasploit %}
+<span class="exploit-yes">Exploit Possible</span>
+{% else %}
+<span class="exploit-no">No Public Exploit</span>
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Exploit Intelligence -->
+
+<div class="summary-section">
+
+<div class="summary-title">
+Exploit Intelligence
+</div>
+
+<div class="cards">
+
+<div class="card">
+<h4>ExploitDB</h4>
+
+{% if exploit.exploitdb %}
+<span class="exploit-yes">✔ Found</span>
+{% else %}
+<span class="exploit-no">✖ Not Found</span>
+{% endif %}
+
+</div>
+
+<div class="card">
+<h4>GitHub PoC</h4>
+
+{% if exploit.github %}
+<span class="exploit-yes">✔ Found</span>
+{% else %}
+<span class="exploit-no">✖ Not Found</span>
+{% endif %}
+
+</div>
+
+<div class="card">
+<h4>Metasploit</h4>
+
+{% if exploit.metasploit %}
+<span class="exploit-yes">✔ Found</span>
+{% else %}
+<span class="exploit-no">✖ Not Found</span>
+{% endif %}
+
+</div>
+
+<div class="card">
+<h4>CISA KEV</h4>
+
+{% if exploit.cisa_kev %}
+<span class="exploit-yes">✔ Actively Exploited</span>
+{% else %}
+<span class="exploit-no">✖ Not Listed</span>
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Description -->
+
+<div class="summary-section">
+
+<div class="summary-title">
+Description
+</div>
+
+<div class="description-text">
+{{ cve_result.description }}
+</div>
+
+</div>
+
+{% endif %}
+
+</div>
+
+{% if ai_analysis %}
+
+<div class="ai-section">
+
+<h3>AI Security Analysis</h3>
+
+<div class="description-text">
+{{ ai_analysis | safe }}
+</div>
+
+</div>
+
+{% endif %}
+
+<script>
+
+document.querySelector("form").addEventListener("submit", function(){
+
+let btn=document.getElementById("analyzeBtn");
+
+btn.disabled=true;
+btn.innerText="Analyzing...";
+
+});
+
+</script>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const cve = params.get("cve");
+
+if(cve){
+
+const input = document.querySelector('input[name="cve"]');
+
+if(input){
+input.value = cve;
+}
+
+}
+
+</script>
+
+<script>
+window.onload=function(){
+document.getElementById("loading").style.display="none";
+};
+</script>
+
+</body>
+
+</html>

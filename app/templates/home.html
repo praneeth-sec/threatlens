@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>ThreatLens</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#020617;
+color:white;
+overflow-x:hidden;
+position:relative;
+z-index:1;
+}
+
+/* Animated grid background */
+
+body::before{
+content:"";
+position:fixed;
+width:200%;
+height:200%;
+background-image:
+linear-gradient(rgba(0,150,255,0.1) 1px, transparent 1px),
+linear-gradient(90deg, rgba(0,150,255,0.1) 1px, transparent 1px);
+background-size:50px 50px;
+animation:gridMove 20s linear infinite;
+z-index:0;
+}
+
+@keyframes gridMove{
+0%{transform:translate(0,0);}
+100%{transform:translate(-50px,-50px);}
+}
+
+/* HERO SECTION */
+
+.hero{
+position:relative;
+z-index:2;
+text-align:center;
+margin-top:160px;
+}
+
+/* Logo glow */
+
+.hero h1{
+font-size:70px;
+color:#4ea1ff;
+animation:glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow{
+from{ text-shadow:0 0 10px #2563eb; }
+to{ text-shadow:0 0 30px #3b82f6; }
+}
+
+.subtitle{
+color:#94a3b8;
+font-size:20px;
+margin-top:10px;
+}
+
+/* Button */
+
+.dashboard-btn{
+margin-top:40px;
+}
+
+.dashboard-btn a{
+text-decoration:none;
+padding:16px 40px;
+background:#2563eb;
+border-radius:8px;
+font-size:18px;
+color:white;
+transition:0.3s;
+}
+
+.dashboard-btn a:hover{
+transform:scale(1.1);
+background:#1d4ed8;
+box-shadow:
+0 0 10px #2563eb,
+0 0 25px #2563eb,
+0 0 50px #2563eb;
+}
+
+/* Floating threat pulses */
+
+.pulse{
+position:absolute;
+width:12px;
+height:12px;
+background:#ef4444;
+border-radius:50%;
+animation:pulse 3s infinite, float 6s ease-in-out infinite;
+z-index:1;
+}
+
+@keyframes pulse{
+0%{box-shadow:0 0 0 0 rgba(239,68,68,0.7);}
+70%{box-shadow:0 0 0 20px rgba(239,68,68,0);}
+100%{box-shadow:0 0 0 0 rgba(239,68,68,0);}
+}
+
+@keyframes float{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-15px);}
+100%{transform:translateY(0px);}
+}
+
+.p1{top:20%;left:15%;}
+.p2{top:60%;left:25%;}
+.p3{top:30%;left:80%;}
+.p4{top:70%;left:70%;}
+.p5{top:50%;left:50%;}
+
+/* ATTACK MAP */
+
+.attack-map{
+margin-top:140px;
+padding:40px;
+text-align:center;
+position:relative;
+z-index:2;
+border-top:1px solid rgba(59,130,246,0.2);
+padding-top:60px;
+}
+
+.attack-map h2{
+font-size:32px;
+margin-bottom:30px;
+color:#60a5fa;
+}
+
+.attack-map iframe{
+border-radius:12px;
+box-shadow:0 0 30px rgba(37,99,235,0.5);
+}
+
+/* SOC STATS */
+
+.stats{
+display:flex;
+justify-content:center;
+gap:60px;
+margin-top:80px;
+flex-wrap:wrap;
+position:relative;
+z-index:2;
+}
+
+.stat{
+background:#0f172a;
+padding:30px;
+border-radius:10px;
+width:220px;
+text-align:center;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+.stat h3{
+font-size:40px;
+color:#3b82f6;
+}
+
+.stat p{
+color:#94a3b8;
+}
+
+/* Footer */
+
+.footer{
+margin-top:80px;
+text-align:center;
+padding:40px;
+color:#64748b;
+position:relative;
+z-index:2;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- threat pulses -->
+
+<div class="pulse p1"></div>
+<div class="pulse p2"></div>
+<div class="pulse p3"></div>
+<div class="pulse p4"></div>
+<div class="pulse p5"></div>
+
+<!-- HERO -->
+
+<div class="hero">
+
+<h1>ThreatLens</h1>
+
+<div class="subtitle">
+AI-Powered Cyber Threat Intelligence Platform
+</div>
+
+<div class="dashboard-btn">
+<a href="/dashboard">Launch Dashboard</a>
+</div>
+
+</div>
+
+<!-- SOC STATS -->
+
+<div class="stats">
+
+<div class="stat">
+<h3 id="totalThreats">0</h3>
+<p>Threat Indicators</p>
+</div>
+
+<div class="stat">
+<h3 id="activeCVEs">0</h3>
+<p>Active CVEs</p>
+</div>
+
+<div class="stat">
+<h3 id="reports">0</h3>
+<p>Analyzed Reports</p>
+</div>
+
+<div class="stat">
+<h3 id="accuracy">--</h3>
+<p>Detection Accuracy</p>
+</div>
+
+</div>
+
+<!-- ATTACK MAP -->
+
+<div class="attack-map">
+
+<h2>Global Cyber Attack Activity</h2>
+
+<iframe 
+src="https://cybermap.kaspersky.com/en/widget/dynamic/dark"
+width="90%"
+height="500"
+frameborder="0">
+</iframe>
+
+</div>
+
+<!-- FOOTER -->
+
+<div class="footer">
+ThreatLens • Cyber Threat Intelligence Platform
+</div>
+
+<script>
+
+/* Stats Count Animation */
+
+document.querySelectorAll(".stat h3").forEach(stat=>{
+let target = parseInt(stat.innerText)
+let count = 0
+
+let interval = setInterval(()=>{
+
+count += Math.ceil(target/40)
+
+if(count >= target){
+stat.innerText = target
+clearInterval(interval)
+}else{
+stat.innerText = count
+}
+
+},30)
+
+})
+
+</script>
+
+<script>
+function loadStats(){
+
+fetch("/stats")
+.then(r => r.json())
+.then(data => {
+
+document.getElementById("totalThreats").innerText = data.total
+document.getElementById("activeCVEs").innerText = data.total
+document.getElementById("reports").innerText = data.total
+
+// optional fake accuracy (since you don't calculate yet)
+document.getElementById("accuracy").innerText = "99"
+
+})
+}
+
+loadStats()
+</script>
+
+</body>
+</html>

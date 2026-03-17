@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>SOC Playbooks</title>
+
+<style>
+
+body{
+background:#071a2c;
+font-family:Arial;
+color:white;
+margin:0;
+}
+
+/* Container */
+
+.container{
+width:1000px;
+margin:auto;
+padding-top:60px;
+}
+
+/* Title */
+
+.title{
+font-size:30px;
+text-align:center;
+margin-bottom:30px;
+}
+
+/* Alert input */
+
+.alert-box{
+background:#1c2e40;
+padding:25px;
+border-radius:10px;
+margin-bottom:30px;
+}
+
+textarea{
+width:100%;
+height:120px;
+border:none;
+border-radius:6px;
+padding:10px;
+font-size:14px;
+}
+
+/* Button */
+
+button{
+margin-top:15px;
+background:#3b82f6;
+border:none;
+padding:10px 18px;
+border-radius:6px;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
+}
+
+/* Quick templates */
+
+.templates{
+margin-top:15px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.template-btn{
+background:#22384e;
+padding:8px 12px;
+border-radius:6px;
+cursor:pointer;
+font-size:13px;
+}
+
+.template-btn:hover{
+background:#3b82f6;
+}
+
+/* Playbook output */
+
+.playbook{
+background:#1c2e40;
+padding:30px;
+border-radius:10px;
+line-height:1.7;
+}
+
+.playbook h1,
+.playbook h2,
+.playbook h3{
+color:#60a5fa;
+margin-top:25px;
+}
+
+.playbook ul{
+margin-left:20px;
+}
+
+.playbook li{
+margin-bottom:8px;
+}
+
+/* Collapsible */
+
+.collapsible{
+background:#22384e;
+padding:12px;
+cursor:pointer;
+border-radius:6px;
+margin-top:15px;
+}
+
+.content{
+display:none;
+padding:15px;
+background:#0f2437;
+border-radius:6px;
+margin-top:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="title">
+SOC Incident Response Playbooks
+</div>
+
+<div class="alert-box">
+
+<form method="POST">
+
+<textarea id="alertInput" name="alert"
+placeholder="Example: Multiple failed login attempts detected from external IP"></textarea>
+
+<br>
+
+<button type="submit">
+Generate Playbook
+</button>
+
+</form>
+
+<div class="templates">
+
+<div class="template-btn" onclick="setAlert('Multiple failed login attempts detected')">
+Brute Force
+</div>
+
+<div class="template-btn" onclick="setAlert('User clicked phishing email link')">
+Phishing
+</div>
+
+<div class="template-btn" onclick="setAlert('Malware detected on endpoint')">
+Malware
+</div>
+
+<div class="template-btn" onclick="setAlert('Suspicious login from unusual location')">
+Suspicious Login
+</div>
+
+<div class="template-btn" onclick="setAlert('Large data transfer to external IP detected')">
+Data Exfiltration
+</div>
+
+</div>
+
+</div>
+
+{% if playbook %}
+
+<div class="playbook">
+
+<h2>Generated Playbook</h2>
+
+<div>
+{{ playbook | safe }}
+</div>
+
+</div>
+
+{% endif %}
+
+</div>
+
+<script>
+
+function setAlert(text){
+
+document.getElementById("alertInput").value = text
+
+}
+
+</script>
+
+</body>
+</html>
