@@ -46,7 +46,7 @@ def scan_url(url):
         screenshot = data.get("task", {}).get("screenshotURL")
 
         return {
-            "screenshot": screenshot,
+            "screenshot": screenshot if screenshot else None,
             "result_url": f"https://urlscan.io/result/{uuid}/"
         }
 

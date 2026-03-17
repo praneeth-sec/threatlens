@@ -219,28 +219,33 @@ Threat Level: <span>{{ threat_level }}</span>
 </div>
 {% endif %}
 
-{% if urlscan %}
 <div class="extra-info">
 
-<h3>🖼️ Live Website Screenshot</h3>
+<h3>🖼 Live Website Screenshot</h3>
 
-<img src="{{ urlscan.screenshot }}" 
-     style="width:100%; border-radius:10px; margin-top:10px;">
+{% if urlscan and urlscan.screenshot %}
+    <img src="{{ urlscan.screenshot }}"
+         style="width:100%; border-radius:10px; margin-top:10px;">
+{% else %}
+    <p style="color:#aaa; margin-top:10px;">
+        ⏳ Screenshot not ready yet... try again in a few seconds
+    </p>
+{% endif %}
 
+{% if urlscan and urlscan.result_url %}
 <p style="margin-top:10px;">
 <a href="{{ urlscan.result_url }}" target="_blank" style="color:#60a5fa;">
 View Full Report →
 </a>
 </p>
-
-</div>
 {% endif %}
 
 </div>
 
 </div>
 
-{% endif %}
+</div>
+
 
 <a class="back" href="/dashboard">← Back to Dashboard</a>
 
