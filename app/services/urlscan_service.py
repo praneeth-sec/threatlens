@@ -5,37 +5,51 @@ import os
 URLSCAN_API_KEY = os.getenv("URLSCAN_API_KEY")
 
 def scan_url(url):
-    headers = {
-        "API-Key": URLSCAN_API_KEY,
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "url": url,
-        "visibility": "public"
-    }
-
     try:
-        # submit scan
+        headers = {
+            "API-Key": URLSCAN_API_KEY,
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "url": url,
+            "visibility": "public"
+        }
+
         response = requests.post(
             "https://urlscan.io/api/v1/scan/",
             headers=headers,
-            json=data
+            json=data,
+            timeout=5
         )
 
-        result = response.json()
-        uuid = result.get("uuid")
+        if response.status_code != 200:
+            return None
 
-        # wait for scan to complete
+        uuid = response.json().get("uuid")
+
+        if not uuid:
+            return None
+
+        # 🔥 WAIT for scan to complete
         time.sleep(5)
 
-        screenshot_url = f"https://urlscan.io/screenshots/{uuid}.png"
+        result_url = f"https://urlscan.io/api/v1/result/{uuid}/"
+
+        result = requests.get(result_url, timeout=5)
+
+        if result.status_code != 200:
+            return None
+
+        data = result.json()
+
+        screenshot = data.get("task", {}).get("screenshotURL")
 
         return {
-            "uuid": uuid,
-            "screenshot": screenshot_url,
-            "result_url": f"https://urlscan.io/result/{uuid}"
+            "screenshot": screenshot,
+            "result_url": f"https://urlscan.io/result/{uuid}/"
         }
 
-    except:
+    except Exception as e:
+        print("URLScan error:", e)
         return None
