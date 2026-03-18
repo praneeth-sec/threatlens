@@ -2,10 +2,41 @@ from flask import Blueprint, request, render_template, redirect, url_for, sessio
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db_connection
 from datetime import datetime, timedelta
+from email.mime.text import MIMEText
 import requests
 import os
 import secrets
+import smtplib
 
+def send_reset_email(to_email, token):
+
+    reset_link = f"https://threatlens-3m5n.onrender.com/reset-password/{token}"
+
+    subject = "ThreatLens Password Reset"
+    body = f"""
+Click the link below to reset your password:
+
+{reset_link}
+
+This link expires in 15 minutes.
+"""
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = os.getenv("EMAIL_USER")
+    msg["To"] = to_email
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=10)
+        server.starttls()
+        server.login(os.getenv("EMAIL_USER"), os.getenv("EMAIL_PASS"))
+        server.send_message(msg)
+        server.quit()
+
+        print("Email sent successfully")
+
+    except Exception as e:
+        print("Email error:", e)
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -104,7 +135,7 @@ def login():
             session["user_id"] = user[0]
             session["username"] = user[1]
 
-            return render_template("dashboard.html", login_success=True)
+            return redirect("/dashboard")
 
         else:
             return render_template(
@@ -137,7 +168,7 @@ def forgot_password():
             )
             conn.commit()
 
-            print(f"RESET LINK: https://threatlens-3m5n.onrender.com/reset-password/{token}")
+            send_reset_email(email, token)
 
         conn.close()
 
@@ -155,6 +186,7 @@ def reset_password(token):
     user = cursor.fetchone()
 
     if not user:
+        conn.close()
         return "Invalid token"
 
     expiry = user[5]  # index for expiry
@@ -163,6 +195,7 @@ def reset_password(token):
          expiry = datetime.fromisoformat(expiry)
 
     if datetime.utcnow() > expiry:
+        conn.close()
         return "Token expired"
 
     if request.method == "POST":
