@@ -46,7 +46,7 @@ def scan_url(url):
 
                 if screenshot:
                     return {
-                        "screenshot": screenshot,
+                        "screenshot": f"https://urlscan.io/screenshots/{uuid}.png",
                         "result_url": f"https://urlscan.io/result/{uuid}/"
                     }
 

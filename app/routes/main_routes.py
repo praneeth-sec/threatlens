@@ -10,11 +10,11 @@ from app.models.database import save_report, get_all_reports, cve_exists
 from app.services.vt_service import check_ip, check_domain, check_url, check_hash
 from app.services.ip_enrich_service import enrich_ip
 from app.services.urlscan_service import scan_url
+from app.services.ioc_ai_service import generate_ioc_analysis
 
 main_bp = Blueprint("main", __name__)
 
 
-# ================= IOC TYPE DETECTION =================
 def detect_ioc_type(ioc):
 
     ip_pattern = r"^\d{1,3}(\.\d{1,3}){3}$"
@@ -35,7 +35,7 @@ def detect_ioc_type(ioc):
     return "unknown"
 
 
-# ================= OTX =================
+# ===== OTX =====
 def check_otx(ioc, ioc_type):
     try:
         res = requests.get(
@@ -47,15 +47,18 @@ def check_otx(ioc, ioc_type):
             data = res.json()
 
             if data.get("pulse_info", {}).get("count", 0) > 0:
-                return {"status": "malicious"}
+                return {
+                    "status": "malicious",
+                    "link": f"https://otx.alienvault.com/indicator/{ioc_type}/{ioc}"
+                }
 
     except:
         pass
 
-    return {"status": "unknown"}
+    return {"status": "unknown", "link": None}
 
 
-# ================= MALWARE BAZAAR =================
+# ===== MALWARE BAZAAR =====
 def check_malwarebazaar(ioc):
     try:
         res = requests.post(
@@ -67,15 +70,17 @@ def check_malwarebazaar(ioc):
         data = res.json()
 
         if data.get("query_status") == "ok":
-            return {"status": "malicious"}
+            return {
+                "status": "malicious",
+                "link": f"https://bazaar.abuse.ch/sample/{ioc}/"
+            }
 
     except:
         pass
 
-    return {"status": "unknown"}
+    return {"status": "unknown", "link": None}
 
 
-# ================= IOC LOOKUP =================
 @main_bp.route("/ioc-lookup", methods=["GET", "POST"])
 def ioc_lookup():
 
@@ -84,13 +89,13 @@ def ioc_lookup():
     tags = []
     otx = None
     mb = None
+    ai_result = None
 
     if request.method == "POST":
 
         ioc = request.form["ip"]
         ioc_type = detect_ioc_type(ioc)
 
-        # ===== FETCH DATA =====
         if ioc_type == "ip":
             vt_result = check_ip(ioc)
             extra = enrich_ip(ioc)
@@ -111,21 +116,14 @@ def ioc_lookup():
         if not vt_result:
             return render_template("ip_lookup.html", error="Error fetching data")
 
-        # ===== STATS =====
         malicious = vt_result.get("malicious", 0)
         suspicious = vt_result.get("suspicious", 0)
         harmless = vt_result.get("harmless", 0)
         total = malicious + suspicious + harmless
 
-        # ===== VERDICT =====
-        if malicious > 0:
-            verdict = "MALICIOUS"
-        elif suspicious > 0:
-            verdict = "SUSPICIOUS"
-        else:
-            verdict = "SAFE"
+        verdict = "MALICIOUS" if malicious > 0 else "SAFE"
 
-        # ===== TAG LOGIC =====
+        # TAGS
         if ioc.endswith(".exe"):
             tags.append("Executable Download")
 
@@ -138,37 +136,33 @@ def ioc_lookup():
         if ioc_type == "url":
             tags.append("Direct File Download")
 
-        # ===== EXTRA SOURCES =====
+        # SOURCES
         otx = check_otx(ioc, ioc_type)
 
         if ioc_type == "hash":
             mb = check_malwarebazaar(ioc)
         else:
-            mb = {"status": "N/A"}
+            mb = {"status": "N/A", "link": None}
 
-        # ===== SOURCES =====
-        sources = {
-            "virustotal": vt_result,
-            "urlscan": urlscan,
-            "abuseipdb": extra,
-            "otx": otx,
-            "malwarebazaar": mb
-        }
+        # VT LINK
+        vt_link = f"https://www.virustotal.com/gui/search/{ioc}"
+
+        # AI
+        ai_result = generate_ioc_analysis(ioc, malicious, total, tags)
 
         return render_template(
             "ip_lookup.html",
             ioc=ioc,
             malicious=malicious,
-            suspicious=suspicious,
-            harmless=harmless,
             total=total,
             verdict=verdict,
             extra=extra,
             urlscan=urlscan,
-            sources=sources,
             tags=tags,
             otx=otx,
-            mb=mb
+            mb=mb,
+            vt_link=vt_link,
+            ai_result=ai_result
         )
 
     return render_template("ip_lookup.html")

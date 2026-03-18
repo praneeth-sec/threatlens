@@ -4,288 +4,122 @@
 <title>ThreatLens IOC</title>
 
 <style>
-body {
-    background: #050d1a;
-    background-image: radial-gradient(#0ff1 1px, transparent 1px);
-    background-size: 40px 40px;
-    font-family: Arial;
-    color: #cbd5f5;
-}
 
-.container {
-    width: 900px;
-    margin: 60px auto;
-}
-
-h1 {
-    text-align: center;
-    color: #00f0ff;
-}
-
-/* SCAN BOX */
-.scan-box {
-    display:flex;
-    gap:10px;
+.back-btn {
+    display:inline-block;
+    padding:10px 16px;
     background:#0f172a;
-    padding:15px;
-    border-radius:12px;
     border:1px solid #1f2a44;
-}
-
-.scan-box input {
-    flex:1;
-    padding:12px;
-    border:none;
     border-radius:8px;
-    background:#020617;
-    color:white;
+    color:#00f0ff;
+    text-decoration:none;
+    transition:0.2s;
 }
 
-.scan-box button {
-    padding:12px 20px;
+.back-btn:hover {
     background:#00f0ff;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
+    color:#020617;
 }
 
-.scan-box button:disabled {
-    background: #334155;
-    cursor: not-allowed;
-}
 
-/* CHIPS */
-.chips {
-    margin-top:10px;
+body {
+    background:#050d1a;
+    color:#cbd5f5;
+    font-family:Arial;
 }
+.container { width:900px;margin:60px auto; }
+h1 { text-align:center;color:#00f0ff; }
 
-.chips span {
-    margin-right:10px;
-    padding:6px 10px;
-    background:#0f172a;
-    border-radius:8px;
-    cursor:pointer;
-}
+.scan-box { display:flex;gap:10px;background:#0f172a;padding:15px;border-radius:10px; }
+input { flex:1;padding:12px;background:#020617;color:white;border:none;border-radius:6px; }
+button { padding:12px;background:#00f0ff;border:none;border-radius:6px; }
+button:disabled { background:#334155; }
 
-/* SOURCE PILLS */
-.sources {
-    margin-top:20px;
-}
+.row { display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #1f2a44; }
+.box { background:#0f172a;margin-top:20px;border-radius:10px; }
 
-.pill {
-    padding:6px 12px;
-    border-radius:20px;
-    border:1px solid #1f2a44;
-    margin-right:10px;
-}
-
-/* TAGS */
-.tags {
-    margin-top:20px;
-}
-
-.tag {
-    padding:6px 12px;
-    border-radius:6px;
-    background:#3b0d0d;
-    color:#ff4d4d;
-    margin-right:10px;
-}
-
-/* DETECTION */
-.box {
-    margin-top:20px;
-    background:#0f172a;
-    border-radius:10px;
-}
-
-.row {
-    display:flex;
-    justify-content:space-between;
-    padding:12px;
-    border-bottom:1px solid #1f2a44;
-}
-
-/* COLORS */
 .red { color:#ff4d4d; }
 .green { color:#22c55e; }
 .yellow { color:#facc15; }
 
-/* INFO CARDS */
-.info {
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:15px;
-    margin-top:20px;
-}
+.card { background:#0f172a;padding:15px;border-radius:10px;margin-top:20px; }
 
-.card {
-    background:#0f172a;
-    padding:15px;
-    border-radius:10px;
-}
+.tag { background:#3b0d0d;color:#ff4d4d;padding:5px 10px;margin-right:10px;border-radius:6px; }
 
-/* AI BOX */
-.ai {
-    margin-top:20px;
-    background:#0f172a;
-    padding:20px;
-    border-left:4px solid #00f0ff;
-}
+a { color:#00f0ff;text-decoration:none; }
 
-img {
-    width:100%;
-    border-radius:10px;
-    margin-top:10px;
-}
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
 <h1>ThreatLens - IOC Analysis</h1>
 
 <form method="POST" id="scanForm">
-
 <div class="scan-box">
-    <input type="text" name="ip" id="iocInput" placeholder="Enter IOC..." required>
-    <button id="scanBtn">Analyze</button>
+<input type="text" name="ip" id="iocInput" placeholder="Enter IOC..." required>
+<button id="scanBtn">Analyze</button>
 </div>
-
 </form>
 
-<div class="chips">
-    <span onclick="fill('8.8.8.8')">8.8.8.8</span>
-    <span onclick="fill('malware-test.com')">malware-test.com</span>
-</div>
-
-<!-- SOURCE PILLS -->
-<div class="sources">
-    <span class="pill">🟢 VirusTotal</span>
-    <span class="pill">🟢 URLScan</span>
-    <span class="pill">🟢 AbuseIPDB</span>
-    <span class="pill">🟢 OTX</span>
-    <span class="pill">🟢 MalwareBazaar</span>
-</div>
-
 {% if tags %}
-<div class="tags">
-    {% for tag in tags %}
-        <span class="tag">{{ tag }}</span>
-    {% endfor %}
+<div>
+{% for tag in tags %}
+<span class="tag">{{ tag }}</span>
+{% endfor %}
 </div>
 {% endif %}
 
-{% if sources %}
+{% if malicious is defined %}
 
-<!-- DETECTION BOX -->
 <div class="box">
 
 <div class="row">
-    <span>VirusTotal</span>
-    <span class="{% if malicious > 0 %}red{% elif suspicious > 0 %}yellow{% else %}green{% endif %}">
-        {{ malicious }} malicious
-    </span>
+<span>VirusTotal</span>
+<span class="{{ 'red' if malicious > 0 else 'green' }}">
+{% if malicious > 0 %}
+malicious ({{ malicious }}/{{ total }})
+{% else %}
+clean (0/{{ total }})
+{% endif %}
+</span>
 </div>
 
 <div class="row">
-    <span>Suspicious</span>
-    <span class="yellow">{{ suspicious }}</span>
+<span>OTX</span>
+<span>{{ otx.status }}</span>
 </div>
 
 <div class="row">
-    <span>Harmless</span>
-    <span class="green">{{ harmless }}</span>
+<span>MalwareBazaar</span>
+<span>{{ mb.status }}</span>
 </div>
 
 <div class="row">
-    <span>AlienVault OTX</span>
-    <span class="yellow">{{ otx.status if otx else 'N/A' }}</span>
+<span>Verdict</span>
+<span class="{{ 'red' if verdict=='MALICIOUS' else 'green' }}">{{ verdict }}</span>
 </div>
 
-<div class="row">
-    <span>MalwareBazaar</span>
-    <span class="red">{{ mb.status if mb else 'N/A' }}</span>
-</div>
-
-<div class="row">
-    <span>Verdict</span>
-    <span class="{% if verdict == 'MALICIOUS' %}red{% elif verdict == 'SUSPICIOUS' %}yellow{% else %}green{% endif %}">
-        {{ verdict }}
-    </span>
-</div>
-
-</div>
-
-<!-- THREAT BAR -->
-<div style="margin-top:20px;">
-<p>Threat Score</p>
-
-<div style="background:#1f2937;height:10px;border-radius:5px;">
-<div style="
-width: {{ (malicious/total)*100 if total>0 else 0 }}%;
-background:red;
-height:100%;
-"></div>
-</div>
-</div>
-
-<!-- INFO -->
-<div class="info">
-
-<div class="card">
-<p>TYPE</p>
-<h3>{{ ioc }}</h3>
 </div>
 
 <div class="card">
-<p>COUNTRY</p>
-<h3>{{ extra.country if extra else 'N/A' }}</h3>
+<h3>Links</h3>
+<a href="{{ vt_link }}" target="_blank">VirusTotal →</a><br>
+{% if otx.link %}<a href="{{ otx.link }}" target="_blank">OTX →</a><br>{% endif %}
+{% if mb.link %}<a href="{{ mb.link }}" target="_blank">MalwareBazaar →</a><br>{% endif %}
+{% if urlscan %}<a href="{{ urlscan.result_url }}" target="_blank">URLScan →</a>{% endif %}
 </div>
 
-<div class="card">
-<p>ISP</p>
-<h3>{{ extra.org if extra else 'N/A' }}</h3>
-</div>
-
-<div class="card">
-<p>ABUSE SCORE</p>
-<h3>{{ extra.abuse_score if extra else 'N/A' }}</h3>
-</div>
-
-</div>
-
-<!-- URLSCAN -->
 {% if urlscan %}
 <div class="card">
-<h3>URLScan Result</h3>
-
-{% if urlscan.screenshot %}
-<img src="{{ urlscan.screenshot }}">
-{% else %}
-<p>Screenshot not ready yet...</p>
-{% endif %}
-
-{% if urlscan.result_url %}
-<p>
-<a href="{{ urlscan.result_url }}" target="_blank" style="color:#00f0ff;">
-View Full Report →
-</a>
-</p>
-{% endif %}
-
+<img src="{{ urlscan.screenshot }}" onerror="this.style.display='none'">
 </div>
 {% endif %}
 
-<!-- AI -->
-<div class="ai">
-<h3>AI Threat Analysis</h3>
-<p>
-This indicator shows potentially malicious behavior based on multi-source detections.
-Immediate investigation and blocking is recommended.
-</p>
+<div class="card">
+<h3>AI Analysis</h3>
+<p>{{ ai_result }}</p>
 </div>
 
 {% endif %}
@@ -293,22 +127,21 @@ Immediate investigation and blocking is recommended.
 </div>
 
 <script>
-function fill(val){
-    document.getElementById("iocInput").value = val;
-}
-
-// BUTTON LOADING + CLEAR UI
 const form = document.getElementById("scanForm");
 const btn = document.getElementById("scanBtn");
 
 form.addEventListener("submit", function() {
-    btn.innerText = "Analyzing...";
-    btn.disabled = true;
+    btn.innerText="Analyzing...";
+    btn.disabled=true;
 
-    const sections = document.querySelectorAll(".box, .info, .ai, .card, .tags");
-    sections.forEach(el => el.style.display = "none");
+    document.querySelectorAll(".box,.card").forEach(e=>e.style.display="none");
 });
 </script>
 
+<div style="display:flex;justify-content:space-between;margin-top:30px;">
+    <a href="/dashboard" class="back-btn">← Dashboard</a>
+
+    <a href="/ioc-lookup" class="back-btn">🔄 New Scan</a>
+</div>
 </body>
 </html>
