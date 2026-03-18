@@ -1,8 +1,10 @@
 from flask import Blueprint, request, render_template, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db_connection
+from datetime import datetime, timedelta
 import requests
 import os
+import secrets
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -112,6 +114,69 @@ def login():
 
     return render_template("login.html")
 
+
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+
+    if request.method == "POST":
+        email = request.form["email"]
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
+        user = cursor.fetchone()
+
+        if user:
+            token = secrets.token_urlsafe(32)
+            expiry = datetime.utcnow() + timedelta(minutes=15)
+
+            cursor.execute(
+                "UPDATE users SET reset_token=%s, reset_token_expiry=%s WHERE email=%s",
+                (token, expiry, email)
+            )
+            conn.commit()
+
+            print(f"RESET LINK: https://threatlens-3m5n.onrender.com/reset-password/{token}")
+
+        conn.close()
+
+        return render_template("forgot_password.html", success="If account exists, reset link sent")
+
+    return render_template("forgot_password.html")
+
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE reset_token=%s", (token,))
+    user = cursor.fetchone()
+
+    if not user:
+        return "Invalid token"
+
+    expiry = user[4]  # index for expiry
+
+    if datetime.utcnow() > expiry:
+        return "Token expired"
+
+    if request.method == "POST":
+        new_password = request.form["password"]
+        hashed = generate_password_hash(new_password)
+
+        cursor.execute(
+            "UPDATE users SET password=%s, reset_token=NULL, reset_token_expiry=NULL WHERE id=%s",
+            (hashed, user[0])
+        )
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/login")
+
+    return render_template("reset_password.html")
 
 @auth_bp.route("/init-db")
 def init_db():
