@@ -4,7 +4,6 @@
 <title>ThreatLens IOC</title>
 
 <style>
-
 body {
     background: #050d1a;
     background-image: radial-gradient(#0ff1 1px, transparent 1px);
@@ -18,7 +17,6 @@ body {
     margin: 60px auto;
 }
 
-/* HEADER */
 h1 {
     text-align: center;
     color: #00f0ff;
@@ -51,6 +49,11 @@ h1 {
     cursor:pointer;
 }
 
+.scan-box button:disabled {
+    background: #334155;
+    cursor: not-allowed;
+}
+
 /* CHIPS */
 .chips {
     margin-top:10px;
@@ -64,7 +67,7 @@ h1 {
     cursor:pointer;
 }
 
-/* SOURCES */
+/* SOURCE PILLS */
 .sources {
     margin-top:20px;
 }
@@ -103,8 +106,10 @@ h1 {
     border-bottom:1px solid #1f2a44;
 }
 
+/* COLORS */
 .red { color:#ff4d4d; }
 .green { color:#22c55e; }
+.yellow { color:#facc15; }
 
 /* INFO CARDS */
 .info {
@@ -128,13 +133,11 @@ h1 {
     border-left:4px solid #00f0ff;
 }
 
-/* SCREENSHOT */
 img {
     width:100%;
     border-radius:10px;
     margin-top:10px;
 }
-
 </style>
 </head>
 
@@ -144,11 +147,11 @@ img {
 
 <h1>ThreatLens - IOC Analysis</h1>
 
-<form method="POST">
+<form method="POST" id="scanForm">
 
 <div class="scan-box">
-    <input type="text" name="ip" placeholder="Enter IOC..." required>
-    <button>Scan</button>
+    <input type="text" name="ip" id="iocInput" placeholder="Enter IOC..." required>
+    <button id="scanBtn">Analyze</button>
 </div>
 
 </form>
@@ -156,6 +159,15 @@ img {
 <div class="chips">
     <span onclick="fill('8.8.8.8')">8.8.8.8</span>
     <span onclick="fill('malware-test.com')">malware-test.com</span>
+</div>
+
+<!-- SOURCE PILLS -->
+<div class="sources">
+    <span class="pill">🟢 VirusTotal</span>
+    <span class="pill">🟢 URLScan</span>
+    <span class="pill">🟢 AbuseIPDB</span>
+    <span class="pill">🟢 OTX</span>
+    <span class="pill">🟢 MalwareBazaar</span>
 </div>
 
 {% if tags %}
@@ -168,16 +180,19 @@ img {
 
 {% if sources %}
 
+<!-- DETECTION BOX -->
 <div class="box">
 
 <div class="row">
     <span>VirusTotal</span>
-    <span class="red">{{ malicious }} malicious</span>
+    <span class="{% if malicious > 0 %}red{% elif suspicious > 0 %}yellow{% else %}green{% endif %}">
+        {{ malicious }} malicious
+    </span>
 </div>
 
 <div class="row">
     <span>Suspicious</span>
-    <span class="red">{{ suspicious }}</span>
+    <span class="yellow">{{ suspicious }}</span>
 </div>
 
 <div class="row">
@@ -186,12 +201,38 @@ img {
 </div>
 
 <div class="row">
+    <span>AlienVault OTX</span>
+    <span class="yellow">{{ otx.status if otx else 'N/A' }}</span>
+</div>
+
+<div class="row">
+    <span>MalwareBazaar</span>
+    <span class="red">{{ mb.status if mb else 'N/A' }}</span>
+</div>
+
+<div class="row">
     <span>Verdict</span>
-    <span class="red">{{ verdict }}</span>
+    <span class="{% if verdict == 'MALICIOUS' %}red{% elif verdict == 'SUSPICIOUS' %}yellow{% else %}green{% endif %}">
+        {{ verdict }}
+    </span>
 </div>
 
 </div>
 
+<!-- THREAT BAR -->
+<div style="margin-top:20px;">
+<p>Threat Score</p>
+
+<div style="background:#1f2937;height:10px;border-radius:5px;">
+<div style="
+width: {{ (malicious/total)*100 if total>0 else 0 }}%;
+background:red;
+height:100%;
+"></div>
+</div>
+</div>
+
+<!-- INFO -->
 <div class="info">
 
 <div class="card">
@@ -216,23 +257,33 @@ img {
 
 </div>
 
+<!-- URLSCAN -->
 {% if urlscan %}
 <div class="card">
-<h3>Website Screenshot</h3>
+<h3>URLScan Result</h3>
 
 {% if urlscan.screenshot %}
 <img src="{{ urlscan.screenshot }}">
 {% else %}
-<p>Screenshot loading...</p>
+<p>Screenshot not ready yet...</p>
+{% endif %}
+
+{% if urlscan.result_url %}
+<p>
+<a href="{{ urlscan.result_url }}" target="_blank" style="color:#00f0ff;">
+View Full Report →
+</a>
+</p>
 {% endif %}
 
 </div>
 {% endif %}
 
+<!-- AI -->
 <div class="ai">
 <h3>AI Threat Analysis</h3>
 <p>
-This indicator shows potentially malicious activity based on detection ratios and contextual signals.
+This indicator shows potentially malicious behavior based on multi-source detections.
 Immediate investigation and blocking is recommended.
 </p>
 </div>
@@ -243,8 +294,20 @@ Immediate investigation and blocking is recommended.
 
 <script>
 function fill(val){
-    document.querySelector("input").value = val;
+    document.getElementById("iocInput").value = val;
 }
+
+// BUTTON LOADING + CLEAR UI
+const form = document.getElementById("scanForm");
+const btn = document.getElementById("scanBtn");
+
+form.addEventListener("submit", function() {
+    btn.innerText = "Analyzing...";
+    btn.disabled = true;
+
+    const sections = document.querySelectorAll(".box, .info, .ai, .card, .tags");
+    sections.forEach(el => el.style.display = "none");
+});
 </script>
 
 </body>
