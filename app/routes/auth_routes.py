@@ -1,13 +1,11 @@
 from flask import Blueprint, request, render_template, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+from db import get_db_connection
 import requests
 import os
 
 
 auth_bp = Blueprint("auth", __name__)
-
-DB_NAME = "threatlens.db"
 
 
 @auth_bp.route("/signup", methods=["GET", "POST"])
@@ -41,11 +39,11 @@ def signup():
 
         password_hash = generate_password_hash(password)
 
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # CHECK IF EMAIL EXISTS
-        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         existing_user = cursor.fetchone()
 
         if existing_user:
@@ -53,7 +51,7 @@ def signup():
             return render_template("signup.html", error="Email already exists")
 
         cursor.execute(
-            "INSERT INTO users (username,email,password) VALUES (?,?,?)",
+            "INSERT INTO users (username,email,password) VALUES (%s,%s,%s)",
             (username, email, password_hash)
         )
 
@@ -91,10 +89,10 @@ def login():
                 "login.html",
                 error="CAPTCHA verification failed"
             )
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM users WHERE email=?", (email,))
+        cursor.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cursor.fetchone()
 
         conn.close()
@@ -113,6 +111,26 @@ def login():
             )
 
     return render_template("login.html")
+
+
+@auth_bp.route("/init-db")
+def init_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "DB Initialized"
 
 
 @auth_bp.route("/logout")
