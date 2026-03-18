@@ -8,35 +8,32 @@ import os
 import secrets
 import smtplib
 
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
+
 def send_reset_email(to_email, token):
 
     reset_link = f"https://threatlens-3m5n.onrender.com/reset-password/{token}"
 
-    subject = "ThreatLens Password Reset"
-    body = f"""
-Click the link below to reset your password:
-
-{reset_link}
-
-This link expires in 15 minutes.
-"""
-
-    msg = MIMEText(body)
-    msg["Subject"] = subject
-    msg["From"] = os.getenv("EMAIL_USER")
-    msg["To"] = to_email
+    message = Mail(
+        from_email=os.getenv("EMAIL_USER"),
+        to_emails=to_email,
+        subject="ThreatLens Password Reset",
+        html_content=f"""
+        <h3>Password Reset Request</h3>
+        <p>Click below to reset your password:</p>
+        <a href="{reset_link}">{reset_link}</a>
+        <p>This link expires in 15 minutes.</p>
+        """
+    )
 
     try:
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=10)
-        server.starttls()
-        server.login(os.getenv("EMAIL_USER"), os.getenv("EMAIL_PASS"))
-        server.send_message(msg)
-        server.quit()
-
-        print("Email sent successfully")
+        sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
+        response = sg.send(message)
+        print("Email sent:", response.status_code)
 
     except Exception as e:
-        print("Email error:", e)
+        print("SendGrid error:", e)
 
 auth_bp = Blueprint("auth", __name__)
 
