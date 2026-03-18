@@ -157,7 +157,10 @@ def reset_password(token):
     if not user:
         return "Invalid token"
 
-    expiry = user[4]  # index for expiry
+    expiry = user[5]  # index for expiry
+    
+    if isinstance(expiry, str):
+         expiry = datetime.fromisoformat(expiry)
 
     if datetime.utcnow() > expiry:
         return "Token expired"
