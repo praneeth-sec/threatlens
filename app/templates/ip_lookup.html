@@ -1,258 +1,251 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
-
-<title>ThreatLens IOC Lookup</title>
+<title>ThreatLens IOC</title>
 
 <style>
 
-body{
-background: linear-gradient(120deg,#071a2c,#0f2437);
-font-family: Arial, sans-serif;
-color:white;
-margin:0;
-padding:0;
+body {
+    background: #050d1a;
+    background-image: radial-gradient(#0ff1 1px, transparent 1px);
+    background-size: 40px 40px;
+    font-family: Arial;
+    color: #cbd5f5;
 }
 
-.container{
-width:700px;
-margin:80px auto;
+.container {
+    width: 900px;
+    margin: 60px auto;
 }
 
-.card{
-background:#1c2e40;
-padding:30px;
-border-radius:10px;
-box-shadow:0 10px 20px rgba(0,0,0,0.4);
+/* HEADER */
+h1 {
+    text-align: center;
+    color: #00f0ff;
 }
 
-h2{
-text-align:center;
-margin-bottom:25px;
+/* SCAN BOX */
+.scan-box {
+    display:flex;
+    gap:10px;
+    background:#0f172a;
+    padding:15px;
+    border-radius:12px;
+    border:1px solid #1f2a44;
 }
 
-input{
-width:75%;
-padding:12px;
-border-radius:6px;
-border:none;
-font-size:16px;
+.scan-box input {
+    flex:1;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#020617;
+    color:white;
 }
 
-button{
-padding:12px 20px;
-background:#3b82f6;
-border:none;
-color:white;
-border-radius:6px;
-cursor:pointer;
-font-size:16px;
+.scan-box button {
+    padding:12px 20px;
+    background:#00f0ff;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
 }
 
-button:hover{
-background:#2563eb;
+/* CHIPS */
+.chips {
+    margin-top:10px;
 }
 
-.result{
-margin-top:25px;
-background:#0f2437;
-padding:20px;
-border-radius:8px;
+.chips span {
+    margin-right:10px;
+    padding:6px 10px;
+    background:#0f172a;
+    border-radius:8px;
+    cursor:pointer;
 }
 
-/* Reputation cards */
-
-.reputation-container{
-display:flex;
-gap:20px;
-margin-top:25px;
+/* SOURCES */
+.sources {
+    margin-top:20px;
 }
 
-.rep-card{
-flex:1;
-padding:20px;
-border-radius:10px;
-text-align:center;
-font-size:18px;
+.pill {
+    padding:6px 12px;
+    border-radius:20px;
+    border:1px solid #1f2a44;
+    margin-right:10px;
 }
 
-.rep-card h3{
-margin-bottom:10px;
+/* TAGS */
+.tags {
+    margin-top:20px;
 }
 
-.rep-card.malicious{
-background:#3b0d0d;
-color:#ff4d4d;
+.tag {
+    padding:6px 12px;
+    border-radius:6px;
+    background:#3b0d0d;
+    color:#ff4d4d;
+    margin-right:10px;
 }
 
-.rep-card.suspicious{
-background:#3b2d0d;
-color:#f59e0b;
+/* DETECTION */
+.box {
+    margin-top:20px;
+    background:#0f172a;
+    border-radius:10px;
 }
 
-.rep-card.harmless{
-background:#0d3b1d;
-color:#10b981;
+.row {
+    display:flex;
+    justify-content:space-between;
+    padding:12px;
+    border-bottom:1px solid #1f2a44;
 }
 
-/* Threat bar */
+.red { color:#ff4d4d; }
+.green { color:#22c55e; }
 
-.threat-bar-container{
-margin-top:30px;
+/* INFO CARDS */
+.info {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    margin-top:20px;
 }
 
-.threat-bar{
-width:100%;
-height:20px;
-background:#1f2937;
-border-radius:5px;
-overflow:hidden;
+.card {
+    background:#0f172a;
+    padding:15px;
+    border-radius:10px;
 }
 
-.threat-fill{
-height:100%;
-background:#ef4444;
+/* AI BOX */
+.ai {
+    margin-top:20px;
+    background:#0f172a;
+    padding:20px;
+    border-left:4px solid #00f0ff;
 }
 
-.verdict{
-margin-top:15px;
-font-size:18px;
-}
-
-.verdict span{
-font-weight:bold;
-}
-
-.error{
-color:#ff4d4d;
-margin-top:20px;
-}
-
-.back{
-margin-top:25px;
-display:inline-block;
-color:#60a5fa;
-text-decoration:none;
+/* SCREENSHOT */
+img {
+    width:100%;
+    border-radius:10px;
+    margin-top:10px;
 }
 
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-<div class="card">
-
-<h2>IOC Reputation Lookup</h2>
+<h1>ThreatLens - IOC Analysis</h1>
 
 <form method="POST">
 
-<input type="text" name="ip" placeholder="Enter IOC (IP, domain, URL, hash)" required>
-
-<button type="submit">Investigate</button>
+<div class="scan-box">
+    <input type="text" name="ip" placeholder="Enter IOC..." required>
+    <button>Scan</button>
+</div>
 
 </form>
 
-{% if error %}
-
-<p class="error">{{ error }}</p>
-
-{% endif %}
-
-{% if result %}
-
-<div class="result">
-
-<h3>Results for {{ ioc }}</h3>
-
-<p>Reputation Score: <strong>{{ reputation_score }}</strong> engines detected</p>
-
-<div class="verdict">
-Threat Level: <span>{{ threat_level }}</span>
+<div class="chips">
+    <span onclick="fill('8.8.8.8')">8.8.8.8</span>
+    <span onclick="fill('malware-test.com')">malware-test.com</span>
 </div>
 
-<div class="reputation-container">
-
-<div class="rep-card malicious">
-<h3>Malicious</h3>
-<p>{{ malicious }}</p>
-</div>
-
-<div class="rep-card suspicious">
-<h3>Suspicious</h3>
-<p>{{ suspicious }}</p>
-</div>
-
-<div class="rep-card harmless">
-<h3>Harmless</h3>
-<p>{{ harmless }}</p>
-</div>
-
-</div>
-
-<div class="threat-bar-container">
-
-<p>Threat Score</p>
-
-<!-- ✅ FIX: BAR FIRST -->
-<div class="threat-bar">
-    <div class="threat-fill"
-    style="width: {{ ((malicious / total) * 100) if total > 0 else 0 }}%;">
-    </div>
-</div>
-
-<!-- ✅ FIX: EXTRA INFO AFTER BAR -->
-{% if extra is not none %}
-<div class="extra-info">
-
-<h3>🌍 IP Intelligence</h3>
-
-<p><strong>Country:</strong> {{ extra.country or "N/A" }}</p>
-<p><strong>City:</strong> {{ extra.city or "N/A" }}</p>
-<p><strong>ISP / Org:</strong> {{ extra.org or "N/A" }}</p>
-<p><strong>Abuse Score:</strong> {{ extra.abuse_score or 0 }}%</p>
-
+{% if tags %}
+<div class="tags">
+    {% for tag in tags %}
+        <span class="tag">{{ tag }}</span>
+    {% endfor %}
 </div>
 {% endif %}
 
-<div class="extra-info">
+{% if sources %}
 
-<h3>🖼 Live Website Screenshot</h3>
+<div class="box">
 
-{% if urlscan and urlscan.screenshot %}
-    <img src="{{ urlscan.screenshot }}"
-         style="width:100%; border-radius:10px; margin-top:10px;">
+<div class="row">
+    <span>VirusTotal</span>
+    <span class="red">{{ malicious }} malicious</span>
+</div>
+
+<div class="row">
+    <span>Suspicious</span>
+    <span class="red">{{ suspicious }}</span>
+</div>
+
+<div class="row">
+    <span>Harmless</span>
+    <span class="green">{{ harmless }}</span>
+</div>
+
+<div class="row">
+    <span>Verdict</span>
+    <span class="red">{{ verdict }}</span>
+</div>
+
+</div>
+
+<div class="info">
+
+<div class="card">
+<p>TYPE</p>
+<h3>{{ ioc }}</h3>
+</div>
+
+<div class="card">
+<p>COUNTRY</p>
+<h3>{{ extra.country if extra else 'N/A' }}</h3>
+</div>
+
+<div class="card">
+<p>ISP</p>
+<h3>{{ extra.org if extra else 'N/A' }}</h3>
+</div>
+
+<div class="card">
+<p>ABUSE SCORE</p>
+<h3>{{ extra.abuse_score if extra else 'N/A' }}</h3>
+</div>
+
+</div>
+
+{% if urlscan %}
+<div class="card">
+<h3>Website Screenshot</h3>
+
+{% if urlscan.screenshot %}
+<img src="{{ urlscan.screenshot }}">
 {% else %}
-    <p style="color:#aaa; margin-top:10px;">
-        ⏳ Screenshot not ready yet... try again in a few seconds
-    </p>
+<p>Screenshot loading...</p>
 {% endif %}
 
-{% if urlscan and urlscan.result_url %}
-<p style="margin-top:10px;">
-<a href="{{ urlscan.result_url }}" target="_blank" style="color:#60a5fa;">
-View Full Report →
-</a>
+</div>
+{% endif %}
+
+<div class="ai">
+<h3>AI Threat Analysis</h3>
+<p>
+This indicator shows potentially malicious activity based on detection ratios and contextual signals.
+Immediate investigation and blocking is recommended.
 </p>
-{% endif %}
-
-</div>
-
-</div>
-
 </div>
 
 {% endif %}
 
-<a class="back" href="/dashboard">← Back to Dashboard</a>
-
 </div>
 
-</div>
+<script>
+function fill(val){
+    document.querySelector("input").value = val;
+}
+</script>
 
 </body>
 </html>

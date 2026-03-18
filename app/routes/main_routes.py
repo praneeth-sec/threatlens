@@ -34,57 +34,43 @@ def detect_ioc_type(ioc):
 @main_bp.route("/ioc-lookup", methods=["GET","POST"])
 def ioc_lookup():
 
-    extra = None  # ✅ FIX: always initialize
+    extra = None
+    urlscan = None
+    tags = []
 
     if request.method == "POST":
 
         ioc = request.form["ip"]
         ioc_type = detect_ioc_type(ioc)
-        
-        print("IOC:", ioc)
-        print("TYPE:", ioc_type)
-        
+
+        # ===== FETCH DATA =====
         if ioc_type == "ip":
-            result = check_ip(ioc)
-            extra = enrich_ip(ioc)  # ✅ KEEP THIS
-            print("EXTRA DATA:", extra)
-            
+            vt_result = check_ip(ioc)
+            extra = enrich_ip(ioc)
+
         elif ioc_type == "domain":
-            result = check_domain(ioc)
-            
+            vt_result = check_domain(ioc)
+
         elif ioc_type == "url":
-            result = check_url(ioc)
+            vt_result = check_url(ioc)
             urlscan = scan_url(ioc)
-            
+
         elif ioc_type == "hash":
-            result = check_hash(ioc)
-            
+            vt_result = check_hash(ioc)
+
         else:
-            return render_template(
-                "ip_lookup.html",
-                error="IOC type not supported yet",
-                extra=extra  # ✅ FIX
-            )
-        
+            return render_template("ip_lookup.html", error="Unsupported IOC type")
 
-        if not result:
-            return render_template(
-                "ip_lookup.html",
-                error="Error contacting VirusTotal or invalid IOC",
-                result=result,
-                ip=ioc,
-                extra=extra  # ✅ FIX
-            )
+        if not vt_result:
+            return render_template("ip_lookup.html", error="Error fetching data")
 
-        malicious = result.get("malicious", 0)
-        suspicious = result.get("suspicious", 0)
-        harmless = result.get("harmless", 0)
+        # ===== STATS =====
+        malicious = vt_result.get("malicious", 0)
+        suspicious = vt_result.get("suspicious", 0)
+        harmless = vt_result.get("harmless", 0)
         total = malicious + suspicious + harmless
 
-        # reputation score
-        reputation_score = f"{malicious}/{total}"
-
-        # verdict
+        # ===== VERDICT =====
         if malicious > 0:
             verdict = "MALICIOUS"
         elif suspicious > 0:
@@ -92,34 +78,41 @@ def ioc_lookup():
         else:
             verdict = "SAFE"
 
-        # threat level
-        ratio = malicious / total if total > 0 else 0
+        # ===== TAG LOGIC =====
+        if ioc.endswith(".exe"):
+            tags.append("Executable Download")
 
-        if ratio > 0.3:
-            threat_level = "HIGH"
-        elif ratio > 0.1:
-            threat_level = "MEDIUM"
-        elif malicious > 0:
-            threat_level = "LOW"
-        else:
-            threat_level = "SAFE"
+        if "malware" in ioc:
+            tags.append("Malware Distribution")
+
+        if malicious > 0:
+            tags.append("Malicious Indicator")
+
+        if ioc_type == "url":
+            tags.append("Direct File Download")
+
+        # ===== SOURCES (for UI) =====
+        sources = {
+            "virustotal": vt_result,
+            "urlscan": urlscan,
+            "abuseipdb": extra
+        }
 
         return render_template(
             "ip_lookup.html",
-            result=result,
             ioc=ioc,
-            verdict=verdict,
-            reputation_score=reputation_score,
-            threat_level=threat_level,
             malicious=malicious,
             suspicious=suspicious,
             harmless=harmless,
             total=total,
-            extra=extra, 
-            urlscan=urlscan if 'urlscan' in locals() else None
+            verdict=verdict,
+            extra=extra,
+            urlscan=urlscan,
+            sources=sources,
+            tags=tags
         )
 
-    return render_template("ip_lookup.html", extra=None)  # ✅ FIX
+    return render_template("ip_lookup.html")
            
 
 @main_bp.route("/")
