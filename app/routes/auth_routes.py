@@ -131,6 +131,19 @@ def init_db():
     conn.close()
 
     return "DB Initialized"
+    
+@auth_bp.route("/update-db")
+def update_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("ALTER TABLE users ADD COLUMN reset_token TEXT;")
+    cursor.execute("ALTER TABLE users ADD COLUMN reset_token_expiry TIMESTAMP;")
+
+    conn.commit()
+    conn.close()
+
+    return "DB Updated"
 
 
 @auth_bp.route("/logout")
